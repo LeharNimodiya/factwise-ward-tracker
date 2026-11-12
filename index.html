@@ -1,0 +1,861 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0e7c86">
+<title>WardTrack – Quarantine Centre Tracker (Prototype)</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230e7c86'/%3E%3Cpath d='M14 6h4v8h8v4h-8v8h-4v-8H6v-4h8z' fill='%23fff'/%3E%3C/svg%3E">
+<style>
+:root{
+  --ink:#14202b; --muted:#5d6b78; --line:#e1e7ec; --bg:#f3f6f8; --card:#fff;
+  --teal:#0e7c86; --teal-d:#0a5d65; --teal-l:#e0f2f3;
+  --red:#c8312b; --red-l:#fdecea; --amber:#b86e00; --amber-l:#fff3dc;
+  --green:#1b7f4b; --green-l:#e3f5ec; --blue:#2358b8; --blue-l:#e8effc; --grey-l:#eef1f4;
+  --r:14px;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;-webkit-font-smoothing:antialiased}
+button,input,select,textarea{font:inherit;color:inherit}
+h1,h2,h3{margin:0;line-height:1.2}
+h2{font-size:18px} h3{font-size:15px}
+.wrap{max-width:980px;margin:0 auto;padding:0 16px}
+small,.muted{color:var(--muted)}
+.hidden{display:none!important}
+
+/* header */
+.top{background:#fff;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:20}
+.top .row{display:flex;align-items:center;gap:12px;padding:10px 0;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:10px;font-weight:700;font-size:17px;letter-spacing:-.01em}
+.logo{width:30px;height:30px;border-radius:8px;background:var(--teal);display:grid;place-items:center}
+.logo svg{width:18px;height:18px}
+.grow{flex:1}
+.pill{display:inline-flex;align-items:center;gap:6px;padding:5px 11px;border-radius:99px;background:var(--teal-l);color:var(--teal-d);font-weight:600;font-size:13px}
+.demo{background:#1d2b36;color:#cfdae3;font-size:12.5px}
+.demo .row{padding:6px 0;gap:10px}
+.demo b{color:#fff}
+.demo button{background:#2d3f4d;border:1px solid #45596a;color:#fff;border-radius:8px;padding:4px 10px;cursor:pointer;font-size:12.5px}
+.demo button:hover{background:#3a5163}
+
+/* buttons */
+.btn{border:1px solid var(--line);background:#fff;border-radius:10px;padding:10px 14px;font-weight:600;cursor:pointer;min-height:42px;transition:.12s}
+.btn:hover{background:var(--grey-l)}
+.btn.primary{background:var(--teal);border-color:var(--teal);color:#fff}
+.btn.primary:hover{background:var(--teal-d)}
+.btn.green{background:var(--green);border-color:var(--green);color:#fff}
+.btn.green:hover{filter:brightness(.92)}
+.btn.danger{background:#fff;border-color:#e3b4b1;color:var(--red)}
+.btn.danger:hover{background:var(--red-l)}
+.btn.ghost{background:transparent}
+.btn.sm{padding:5px 10px;min-height:32px;font-size:13px}
+.btn[disabled]{opacity:.45;cursor:not-allowed}
+.btn.block{width:100%}
+
+/* layout bits */
+main{padding:18px 0 90px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:16px}
+.grid{display:grid;gap:12px}
+.g2{grid-template-columns:repeat(auto-fit,minmax(260px,1fr))}
+.g4{grid-template-columns:repeat(auto-fit,minmax(170px,1fr))}
+.stack>*+*{margin-top:12px}
+.between{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.rowflex{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.tabs{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px;margin:14px 0}
+.tab{border:1px solid var(--line);background:#fff;border-radius:99px;padding:8px 14px;font-weight:600;cursor:pointer;white-space:nowrap;color:var(--muted)}
+.tab.on{background:var(--ink);border-color:var(--ink);color:#fff}
+.tab .n{opacity:.7;font-weight:500;margin-left:4px}
+.search{width:100%;padding:11px 14px;border:1px solid var(--line);border-radius:10px;background:#fff}
+.search:focus,input:focus,select:focus,textarea:focus{outline:2px solid var(--teal);outline-offset:1px}
+.bar{height:9px;border-radius:9px;background:var(--grey-l);overflow:hidden}
+.bar>i{display:block;height:100%;background:var(--teal);border-radius:9px;transition:width .3s}
+.kpi .v{font-size:28px;font-weight:700;letter-spacing:-.02em}
+.kpi .l{color:var(--muted);font-size:13px;margin-bottom:4px}
+.kpi .bar{margin-top:8px}
+
+/* badges */
+.badge{display:inline-block;padding:2px 9px;border-radius:99px;font-size:12px;font-weight:600;background:var(--grey-l);color:var(--muted)}
+.badge.red{background:var(--red-l);color:var(--red)}
+.badge.amber{background:var(--amber-l);color:var(--amber)}
+.badge.green{background:var(--green-l);color:var(--green)}
+.badge.blue{background:var(--blue-l);color:var(--blue)}
+.badge.teal{background:var(--teal-l);color:var(--teal-d)}
+
+/* patient row */
+.pcard{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center;background:#fff;border:1px solid var(--line);border-radius:var(--r);padding:12px 14px}
+.pcard.alert{border-color:#efb8b5;background:#fffafa}
+.pcard.ok{border-color:#b7e0c9;background:#fbfefc}
+.room{min-width:46px;height:46px;border-radius:12px;background:var(--grey-l);display:grid;place-items:center;font-weight:700;font-size:16px}
+.room small{display:block;font-size:9.5px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;margin-top:-6px}
+.pname{font-weight:650;font-size:16px;cursor:pointer;background:none;border:0;padding:0;text-align:left}
+.pname:hover{text-decoration:underline}
+.pmeta{color:var(--muted);font-size:13px;margin-top:2px}
+.badges{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.pact{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-end}
+.tbox{text-align:right;line-height:1.15}
+.tbox b{font-size:20px}
+.tbox small{display:block;font-size:11.5px}
+.tbox.fever b{color:var(--red)} .tbox.crit b{color:var(--red);text-decoration:underline wavy} .tbox.ok b{color:var(--green)} .tbox.low b{color:var(--amber)}
+@media (max-width:560px){
+  .pcard{grid-template-columns:auto 1fr}
+  .pact{grid-column:1 / -1;justify-content:space-between}
+  .pact .btn.primary{flex:1}
+}
+.dots{display:inline-flex;gap:4px;vertical-align:middle}
+.dots i{width:11px;height:11px;border-radius:50%;border:2px solid #c3ccd4;display:block}
+.dots i.f{background:var(--green);border-color:var(--green)}
+
+/* banner */
+.banner{border-radius:var(--r);padding:12px 14px;display:flex;gap:10px;align-items:flex-start;border:1px solid}
+.banner.red{background:var(--red-l);border-color:#efb8b5;color:#7d1f1b}
+.banner.amber{background:var(--amber-l);border-color:#f0d49b;color:#6f4300}
+.banner.green{background:var(--green-l);border-color:#b7e0c9;color:#13603a}
+.banner.blue{background:var(--blue-l);border-color:#c4d4f4;color:#1b3f87}
+.banner b{display:block}
+
+/* login */
+.login{max-width:760px;margin:0 auto;padding:36px 16px 60px}
+.login h1{font-size:30px;letter-spacing:-.02em;margin:14px 0 6px}
+.rolecard{display:flex;flex-direction:column;gap:8px;text-align:left;background:#fff;border:1px solid var(--line);border-radius:var(--r);padding:18px;cursor:pointer}
+.rolecard:hover{border-color:var(--teal);box-shadow:0 4px 18px rgba(14,124,134,.12)}
+.rolecard .ic{font-size:26px}
+.rolecard ul{margin:2px 0 0;padding-left:18px;color:var(--muted);font-size:13.5px}
+.rolecard .go{margin-top:auto;color:var(--teal-d);font-weight:700}
+details.guide{margin-top:20px}
+details.guide summary{cursor:pointer;font-weight:700}
+details.guide ol{padding-left:20px;margin:10px 0 0}
+details.guide li{margin:6px 0}
+
+/* modal */
+.overlay{position:fixed;inset:0;background:rgba(15,25,35,.5);z-index:50;display:flex;align-items:flex-end;justify-content:center}
+.sheet{background:#fff;width:100%;max-width:480px;border-radius:20px 20px 0 0;padding:20px;max-height:92vh;overflow:auto;box-shadow:0 -10px 40px rgba(0,0,0,.2)}
+@media (min-width:640px){.overlay{align-items:center}.sheet{border-radius:20px}}
+label.f{display:block;font-weight:600;font-size:13.5px;margin:12px 0 5px}
+input.t,select.t,textarea.t{width:100%;padding:11px 12px;border:1px solid #cfd8df;border-radius:10px;background:#fff}
+textarea.t{min-height:92px;resize:vertical}
+.big{font-size:34px;font-weight:700;text-align:center;letter-spacing:-.02em}
+.seg{display:inline-flex;border:1px solid #cfd8df;border-radius:9px;overflow:hidden}
+.seg button{border:0;background:#fff;padding:7px 14px;font-weight:600;cursor:pointer}
+.seg button.on{background:var(--ink);color:#fff}
+.fb{margin-top:10px;padding:9px 12px;border-radius:10px;font-size:13.5px;font-weight:550;background:var(--grey-l);color:var(--muted)}
+.fb.ok{background:var(--green-l);color:var(--green)} .fb.fever,.fb.crit,.fb.error{background:var(--red-l);color:var(--red)} .fb.warn{background:var(--amber-l);color:var(--amber)}
+.err{color:var(--red);font-size:13px;margin-top:4px}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{border:1px solid #cfd8df;background:#fff;border-radius:99px;padding:7px 13px;cursor:pointer;font-size:14px}
+.chip.on{background:var(--teal);border-color:var(--teal);color:#fff}
+
+/* toast */
+.toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);z-index:80;background:#14202b;color:#fff;padding:12px 18px;border-radius:12px;max-width:92vw;font-weight:550;box-shadow:0 10px 30px rgba(0,0,0,.25)}
+.toast.warn{background:#8a4b00}.toast.error{background:#a5271f}.toast.good{background:#176b41}
+
+/* tables */
+table{width:100%;border-collapse:collapse;font-size:14px}
+th{text-align:left;font-size:12px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);padding:8px 8px;border-bottom:1px solid var(--line)}
+td{padding:9px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+tr:last-child td{border-bottom:0}
+.tw{overflow-x:auto}
+
+/* rooms */
+.rooms{display:grid;grid-template-columns:repeat(auto-fill,minmax(74px,1fr));gap:8px}
+.tile{border:1.5px solid var(--line);border-radius:10px;background:#fff;padding:7px 6px;text-align:center;cursor:pointer;position:relative;min-height:62px}
+.tile b{display:block;font-size:15px}
+.tile span{display:block;font-size:10.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tile.free{border-style:dashed;background:transparent}
+.tile.wait{background:var(--amber-l);border-color:#f0d49b}
+.tile.temp{background:var(--blue-l);border-color:#c4d4f4}
+.tile.done{background:var(--teal-l);border-color:#b2dadd}
+.tile.elig{background:#fff;border-color:var(--green);box-shadow:inset 0 0 0 1px var(--green)}
+.tile.ready{background:var(--green);border-color:var(--green);color:#fff}
+.tile.ready span{color:#d7f3e4}
+.tile i{position:absolute;top:5px;right:5px;width:8px;height:8px;border-radius:50%;background:var(--red)}
+.legend{display:flex;gap:12px;flex-wrap:wrap;font-size:12.5px;color:var(--muted);margin:10px 0}
+.legend span:before{content:"";display:inline-block;width:12px;height:12px;border-radius:4px;margin-right:5px;vertical-align:-2px;border:1.5px solid var(--line)}
+.legend .l-free:before{border-style:dashed}.legend .l-wait:before{background:var(--amber-l);border-color:#f0d49b}.legend .l-temp:before{background:var(--blue-l);border-color:#c4d4f4}.legend .l-done:before{background:var(--teal-l);border-color:#b2dadd}.legend .l-elig:before{border-color:var(--green)}.legend .l-ready:before{background:var(--green);border-color:var(--green)}
+
+/* gauge */
+.gauge{position:relative;height:16px;border-radius:99px;background:linear-gradient(90deg,#d7efe2 0 50%,#fbdcd9 50% 100%);margin:22px 0 6px}
+.gauge .fill{position:absolute;left:0;top:0;bottom:0;border-radius:99px;background:var(--green);opacity:.85}
+.gauge .fill.red{background:var(--red)} .gauge .fill.amber{background:#e09a1a}
+.gauge .mark{position:absolute;top:-8px;bottom:-8px;width:2px;background:var(--ink);left:50%}
+.gauge .mark:after{content:"15% limit";position:absolute;top:-16px;left:50%;transform:translateX(-50%);font-size:11px;font-weight:700;white-space:nowrap}
+.feed{list-style:none;margin:0;padding:0}
+.feed li{display:flex;gap:10px;padding:8px 0;border-bottom:1px solid var(--line);font-size:14px}
+.feed li:last-child{border-bottom:0}
+.feed time{color:var(--muted);font-size:12.5px;min-width:78px}
+.feed .alert{color:var(--red);font-weight:600}.feed .good{color:var(--green);font-weight:600}
+svg.chart text{font-size:10.5px;fill:#5d6b78}
+.empty{text-align:center;color:var(--muted);padding:34px 10px}
+.sec-title{margin:22px 0 10px;display:flex;align-items:center;gap:8px}
+.back{background:none;border:0;color:var(--teal-d);font-weight:700;cursor:pointer;padding:6px 0;margin-bottom:6px}
+</style>
+</head>
+<body>
+<div id="app"></div>
+
+<script>
+/* ============================================================
+   WardTrack prototype – data model, rules and UI (no backend)
+   State lives in localStorage so the whole workflow is demonstrable.
+   ============================================================ */
+const FEVER = 38.0;          // °C – fever threshold
+const CAPACITY = 74;         // rooms
+const BENCH = 0.15;          // expected max mortality
+const NEED_DAYS = 3;         // consecutive afebrile days to be cured
+const KEY = 'wardtrack_proto_v1';
+const TREATMENTS = ['Antipyretic (paracetamol)','IV fluids / hydration','Antiviral course','Oxygen support','Continue isolation & monitoring','Other (see notes)'];
+const USERS = {
+  nurse:{role:'nurse', name:'Priya Nair',        title:'Nurse'},
+  doctor:{role:'doctor', name:'Dr. Meera Mehta', title:'Doctor'},
+  admin:{role:'admin', name:'Sunil Kulkarni',    title:'Admin staff'}
+};
+
+/* ---------- date helpers (app has a "demo day" offset) ---------- */
+let S = null;
+const baseToday = () => { const d = new Date(); d.setHours(0,0,0,0); return d; };
+const addDays = (d,n) => { const x = new Date(d); x.setDate(x.getDate()+n); return x; };
+const dkey = d => d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+const fromKey = k => { const [y,m,d] = k.split('-').map(Number); return new Date(y,m-1,d); };
+const today = () => addDays(baseToday(), S.dayOffset);
+const tk = () => dkey(today());
+const yk = () => dkey(addDays(today(),-1));
+const nowISO = () => { const n = new Date(), t = today(); t.setHours(n.getHours(), n.getMinutes(), n.getSeconds()); return t.toISOString(); };
+const fmtTime = iso => new Date(iso).toLocaleTimeString([], {hour:'numeric', minute:'2-digit'});
+const fmtDay = (d, o) => d.toLocaleDateString('en-IN', o || {weekday:'short', day:'numeric', month:'short'});
+const diffDays = (a,b) => Math.round((a-b)/86400000);
+const esc = s => String(s==null?'':s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+/* ---------- seed data ---------- */
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+
+function seed(){
+  const R = mulberry32(20241112), T0 = baseToday();
+  const first = ['Aarav','Diya','Rohan','Ananya','Vikram','Meera','Arjun','Isha','Kabir','Saanvi','Neil','Priyanka','Imran','Sara','Tanvi','Harsh','Fatima','Dev','Kavya','Manav','Nisha','Omkar','Pooja','Rahul','Sneha','Yash','Zoya','Aditya','Bhavna','Chirag','Deepa','Ekta','Farhan','Gauri','Hemant'];
+  const last = ['Sharma','Patil','Deshmukh','Khan','Iyer','Nair','Gupta','Joshi','Kulkarni','Reddy','Singh','Mehta','Shah','Bhatt','Pawar','Jadhav','Menon','Das','Verma','Chavan','Agarwal','Rao','Thakur','Kapoor','More'];
+  const nurses = ['Priya Nair','Ravi Kumar','Anita Das'], docs = ['Dr. Meera Mehta','Dr. Arjun Iyer'];
+  const pick = a => a[Math.floor(R()*a.length)];
+  const elig = [3,11,19,27], cleared = [7,15,23,31,40], almost = [5,13,21,35];
+  const patients = [];
+  for (let i=0;i<CAPACITY;i++){
+    const fE = elig.includes(i) || cleared.includes(i), fA = almost.includes(i);
+    const daysIn = (fE||fA) ? 5 : Math.floor(R()*10);
+    const feverLen = fE ? 2 : fA ? 3 : 2 + Math.floor(R()*7);
+    const p = {id:'P'+(1001+i), name: first[i%first.length]+' '+last[(i*7+3)%last.length], age:18+Math.floor(R()*62), sex:R()<.5?'F':'M',
+      room:i+1, admitted:dkey(addDays(T0,-daysIn)), status:'admitted', temps:{}, visits:{}, requestTemp:false};
+    for (let k=0;k<=daysIn;k++){
+      const d = addDays(T0, -(daysIn-k)), key = dkey(d), isToday = k===daysIn;
+      const readyNow = isToday && (i===3 || i===11);   // eligible + already measured today, waiting for doctor sign-off
+      const measured = isToday ? (readyNow || (!(fE||fA) && R()<0.5)) : ((fE||fA) ? true : R()<0.95);
+      if (!measured) continue;
+      const fever = k < feverLen;
+      const temp = +(fever ? 38.2+R()*1.7 : 36.4+R()*1.2).toFixed(1);
+      const t1 = new Date(d); t1.setHours(6+Math.floor(R()*3), Math.floor(R()*60));
+      p.temps[key] = {temp, at:t1.toISOString(), by:pick(nurses)};
+      const visited = isToday ? (!readyNow && R()<0.4) : ((fE||fA) ? true : R()<0.92);
+      if (visited){
+        const t2 = new Date(d); t2.setHours(10+Math.floor(R()*3), Math.floor(R()*60));
+        p.visits[key] = {at:t2.toISOString(), by:pick(docs), treatments: fever ? ['Antipyretic (paracetamol)','IV fluids / hydration'] : ['Continue isolation & monitoring'],
+          notes: fever ? 'Fever persists. Hydration encouraged, continue antipyretics.' : 'Afebrile. Patient comfortable, monitoring continues.'};
+      }
+    }
+    if (cleared.includes(i)){
+      p.status = 'cleared'; p.clearedBy = 'Dr. Meera Mehta';
+      const c = addDays(T0,-1); c.setHours(12,15); p.clearedAt = c.toISOString();
+    }
+    patients.push(p);
+  }
+  // demo hooks: one critical reading today, two doctor requests
+  const crit = patients[9]; crit.status = 'admitted';
+  const ct = new Date(); crit.temps[dkey(T0)] = {temp:40.2, at:ct.toISOString(), by:'Ravi Kumar'}; delete crit.visits[dkey(T0)];
+  [12,30].forEach(i => { if (!patients[i].temps[dkey(T0)]) patients[i].requestTemp = true; });
+
+  // closed historical cases: 58 cured + 9 deceased = 13.4% mortality (just under the 15% limit)
+  const closed = [];
+  for (let i=0;i<67;i++){
+    const dead = i >= 58;
+    closed.push({id:'H'+(2001+i), name:first[(i*3+1)%first.length]+' '+last[(i*11+5)%last.length], age:20+Math.floor(R()*60), sex:R()<.5?'F':'M',
+      room:null, admitted:dkey(addDays(T0,-(20+Math.floor(R()*10)))), status: dead?'deceased':'discharged', temps:{}, visits:{},
+      closedDate: dkey(addDays(T0,-(1+Math.floor(R()*28)))), hist:true});
+  }
+  for (let i=closed.length-1;i>0;i--){ const j=Math.floor(R()*(i+1)); [closed[i],closed[j]]=[closed[j],closed[i]]; }
+
+  const waitlist = [
+    {id:'W1', name:'Rakesh Bose', age:44, sex:'M', addedAt:nowISO0(T0,-1,16,40)},
+    {id:'W2', name:'Lata Pillai', age:61, sex:'F', addedAt:nowISO0(T0,0,7,55)},
+    {id:'W3', name:'Samir Ansari', age:29, sex:'M', addedAt:nowISO0(T0,0,9,10)}
+  ];
+  return {v:1, baseKey:dkey(T0), dayOffset:0, patients:patients.concat(closed), waitlist, log:[], nextNum:1075, nextW:4, session:null};
+}
+function nowISO0(base,off,h,m){ const d = addDays(base,off); d.setHours(h,m,0,0); return d.toISOString(); }
+
+/* ---------- persistence ---------- */
+function load(){
+  try { const raw = localStorage.getItem(KEY); if (raw){ const s = JSON.parse(raw); if (s && s.baseKey === dkey(baseToday())) return s; } } catch(e){}
+  return null;
+}
+function save(){ try { localStorage.setItem(KEY, JSON.stringify(S)); } catch(e){} }
+function resetData(keepSession){
+  const sess = keepSession && S ? S.session : null;
+  S = seed(); S.session = sess; save();
+}
+
+/* ---------- domain rules ---------- */
+const byId = id => S.patients.find(p => p.id === id);
+const activePts = () => S.patients.filter(p => p.status==='admitted' || p.status==='cleared');
+const roundPts  = () => S.patients.filter(p => p.status==='admitted');         // those who still need daily care
+const tempToday = p => p.temps[tk()];
+const visitToday = p => p.visits[tk()];
+const tempClass = t => t >= 40 ? 'crit' : t >= FEVER ? 'fever' : t < 35.5 ? 'low' : 'ok';
+const fmtT = t => t.toFixed(1)+'°C';
+const usedRooms = () => new Set(activePts().map(p => p.room));
+const freeRooms = () => { const u = usedRooms(), r = []; for (let i=1;i<=CAPACITY;i++) if(!u.has(i)) r.push(i); return r; };
+
+// consecutive afebrile *measured* calendar days, ending today (if measured) else yesterday. A missed day breaks the streak.
+function streakInfo(p){
+  let d = today(); if (!p.temps[dkey(d)]) d = addDays(d,-1);
+  let n = 0, start = null;
+  for(;;){ const r = p.temps[dkey(d)]; if (!r || r.temp >= FEVER) break; n++; start = d; d = addDays(d,-1); }
+  return {n, start};
+}
+const eligible = p => p.status==='admitted' && streakInfo(p).n >= NEED_DAYS;
+const eligibleSince = p => { const s = streakInfo(p); return s.n >= NEED_DAYS ? addDays(s.start, NEED_DAYS-1) : null; };
+
+function addLog(text, kind){ S.log.unshift({at:nowISO(), text, kind:kind||''}); S.log = S.log.slice(0,60); }
+function stats(){
+  const closed = S.patients.filter(p => p.status==='discharged' || p.status==='deceased');
+  const win = closed.filter(p => diffDays(today(), fromKey(p.closedDate)) <= 6);
+  const mk = arr => { const dead = arr.filter(p=>p.status==='deceased').length; return {n:arr.length, dead, cured:arr.length-dead, rate: arr.length ? dead/arr.length : 0}; };
+  return {all:mk(closed), week:mk(win)};
+}
+
+/* ---------- mutations (each guards role + business rule) ---------- */
+function need(role){ if (!S.session || S.session.role !== role) throw new Error('Not allowed for your role.'); }
+
+function recordTemp(pid, tC, reason){
+  need('nurse');
+  const p = byId(pid), k = tk();
+  if (!p || p.status !== 'admitted') throw new Error('Patient is not under active care.');
+  if (!(tC >= 34 && tC <= 43)) throw new Error('Temperature out of valid range.');
+  const ex = p.temps[k], by = S.session.name;
+  if (ex){
+    if (!reason) throw new Error('A reason is required to correct a reading.');
+    ex.history = (ex.history||[]).concat({temp:ex.temp, at:ex.at, by:ex.by});
+    ex.temp = tC; ex.at = nowISO(); ex.by = by; ex.correction = reason;
+    addLog(`Room ${p.room} reading corrected to ${fmtT(tC)} by ${by} (${reason})`);
+  } else {
+    p.temps[k] = {temp:tC, at:nowISO(), by};
+    addLog(`Room ${p.room}: ${fmtT(tC)} recorded by ${by}`, tC>=40?'alert':'');
+    if (tC >= 40) addLog(`⚠ Room ${p.room} ${p.name}: high fever ${fmtT(tC)}`, 'alert');
+  }
+  p.requestTemp = false;
+  const st = streakInfo(p);
+  if (st.n === NEED_DAYS) addLog(`Room ${p.room} ${p.name} now has ${NEED_DAYS} afebrile days – awaiting doctor sign-off`, 'good');
+  save();
+  return {streak:st.n};
+}
+function requestTemp(pid){ need('doctor'); const p = byId(pid); if (tempToday(p)) return; p.requestTemp = true; addLog(`Dr. requested temperature for Room ${p.room}`); save(); }
+function saveVisit(pid, treatments, notes, clear){
+  need('doctor');
+  const p = byId(pid);
+  if (p.status !== 'admitted') throw new Error('Patient is not under active care.');
+  if (!tempToday(p)) throw new Error('Temperature has not been recorded today. Visit is locked.');
+  if (!treatments.length && !notes.trim()) throw new Error('Add at least one treatment or a note.');
+  if (clear && !eligible(p)) throw new Error('Not eligible: needs 3 consecutive fever-free days.');
+  p.visits[tk()] = {at:nowISO(), by:S.session.name, treatments, notes:notes.trim()};
+  addLog(`Room ${p.room} visited by ${S.session.name}`);
+  if (clear){
+    p.status = 'cleared'; p.clearedBy = S.session.name; p.clearedAt = nowISO();
+    addLog(`Room ${p.room} ${p.name} cleared for discharge by ${S.session.name}`, 'good');
+  }
+  save();
+}
+function recordDeath(pid, note){
+  need('doctor');
+  const p = byId(pid);
+  if (p.status !== 'admitted') throw new Error('Patient is not under active care.');
+  if (note.trim().length < 5) throw new Error('A clinical note is required.');
+  p.status = 'deceased'; p.closedDate = tk(); p.closedNote = note.trim(); p.lastRoom = p.room; p.room = null;
+  addLog(`${p.name} (was Room ${p.lastRoom}) recorded as deceased by ${S.session.name}`, 'alert');
+  save();
+}
+function discharge(pid){
+  need('admin');
+  const p = byId(pid);
+  if (p.status !== 'cleared') throw new Error('Doctor sign-off is required before discharge.');
+  p.status = 'discharged'; p.closedDate = tk(); p.lastRoom = p.room; p.room = null;
+  addLog(`${p.name} discharged from Room ${p.lastRoom} – room freed`, 'good');
+  save();
+}
+function admit(data, room){
+  need('admin');
+  if (!freeRooms().includes(room)) throw new Error('That room is not free.');
+  const p = {id:'P'+(S.nextNum++), name:data.name, age:data.age, sex:data.sex, room, admitted:tk(), status:'admitted', temps:{}, visits:{}, requestTemp:false};
+  S.patients.unshift(p); addLog(`${p.name} admitted to Room ${room}`); save(); return p;
+}
+function addWait(data){ need('admin'); S.waitlist.push({id:'W'+(S.nextW++), name:data.name, age:data.age, sex:data.sex, addedAt:nowISO()}); addLog(`${data.name} added to waiting list`); save(); }
+function admitWait(wid){
+  need('admin');
+  const fr = freeRooms(); if (!fr.length) throw new Error('No free rooms.');
+  const w = S.waitlist.find(x => x.id===wid); S.waitlist = S.waitlist.filter(x => x.id!==wid);
+  admit(w, fr[0]); return fr[0];
+}
+function nextDay(){
+  const y = tk(), pts = roundPts().filter(p => p.admitted <= y);
+  const mt = pts.filter(p => !p.temps[y]).length, mv = pts.filter(p => !p.visits[y]).length;
+  S.dayOffset++; save();
+  return {mt, mv};
+}
+
+/* ---------- UI state ---------- */
+const ui = {tab:null, filter:'todo', q:'', pid:null, modal:null, unit:'C', draft:null, toast:null, admitRoom:null, formErr:{}};
+const app = document.getElementById('app');
+let toastTimer = null;
+
+function toast(msg, kind){
+  ui.toast = {msg, kind:kind||''}; clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { ui.toast = null; const t = document.querySelector('.toast'); if (t) t.remove(); }, 4200);
+}
+function defaultTab(role){ return role==='nurse' ? 'rounds' : role==='doctor' ? 'ready' : 'dash'; }
+
+/* ---------- small view helpers ---------- */
+const badge = (t,c) => `<span class="badge ${c||''}">${t}</span>`;
+function dots(n){ const k = Math.min(n, NEED_DAYS); return `<span class="dots" title="${k}/${NEED_DAYS} afebrile days">${[0,1,2].map(i=>`<i class="${i<k?'f':''}"></i>`).join('')}</span>`; }
+function match(p){ const q = ui.q.trim().toLowerCase(); return !q || p.name.toLowerCase().includes(q) || String(p.room).includes(q); }
+function ico(){ return `<svg viewBox="0 0 32 32" fill="#fff"><path d="M14 6h4v8h8v4h-8v8h-4v-8H6v-4h8z"/></svg>`; }
+
+/* ---------- login ---------- */
+function loginView(){
+  const card = (k, ic, ul) => `<button class="rolecard" data-act="login" data-role="${k}"><span class="ic">${ic}</span><h3>${USERS[k].title} <small>· ${USERS[k].name}</small></h3><ul>${ul.map(x=>`<li>${x}</li>`).join('')}</ul><span class="go">Continue as ${USERS[k].title} →</span></button>`;
+  return `<div class="login">
+    <div class="brand"><span class="logo">${ico()}</span> WardTrack <span class="badge teal">Prototype</span></div>
+    <h1>Ward 7 – Quarantine &amp; Treatment Centre</h1>
+    <p class="muted" style="margin:0 0 22px;max-width:600px">Daily temperature rounds, doctor visits and discharge, in one place. Pick a role to see that user's screens. Everything works end to end – data is stored in your browser.</p>
+    <div class="grid g2" style="grid-template-columns:repeat(auto-fit,minmax(210px,1fr))">
+      ${card('nurse','🩺',['See who still needs a temperature today','Record / correct temperatures','No duplicate or missed readings'])}
+      ${card('doctor','👨‍⚕️',['See who is ready for a visit','Visits locked until temp is recorded','Log treatment, sign off discharge, record outcome'])}
+      ${card('admin','🗂️',['Occupancy &amp; room map','Discharge queue (no more delays)','Mortality vs 15% benchmark, admissions &amp; waiting list'])}
+    </div>
+    <details class="guide card" open><summary>2-minute demo walkthrough</summary>
+      <ol>
+        <li><b>Nurse</b> → open <i>To measure</i> → tap <i>Record temperature</i> on a patient. Try 41, 25, or 36.8 to see warnings. The patient moves to <i>Measured</i>; a second reading is blocked (only a reasoned correction).</li>
+        <li><b>Doctor</b> → <i>Awaiting temp</i> shows locked patients (tap <i>Request temperature</i>). In <i>Ready to see</i>, green-flagged patients have 3 fever-free days: open one, log treatment and use <i>Save &amp; clear for discharge</i>. Other patients: open, log treatment, <i>Save visit</i>.</li>
+        <li><b>Admin</b> → <i>Discharges</i> shows cleared patients with one-tap <i>Discharge &amp; free room</i>. <i>Admissions</i> lets you admit into the freed room (or join the waiting list when full).</li>
+        <li><b>Doctor</b> → open any patient → <i>Record death</i>. Do it twice and watch the Admin dashboard mortality gauge cross the <b>15%</b> limit.</li>
+        <li>Use <i>Next day</i> in the dark bar to simulate tomorrow – the missed temperatures / visits report appears and 3-day streaks advance.</li>
+      </ol>
+    </details>
+  </div>`;
+}
+
+/* ---------- shell ---------- */
+function shell(){
+  const u = S.session;
+  const header = `<div class="top"><div class="wrap row">
+      <div class="brand"><span class="logo">${ico()}</span> WardTrack</div>
+      <span class="pill">${u.title} · ${esc(u.name)}</span>
+      <span class="grow"></span>
+      <button class="btn sm" data-act="logout">Switch role</button>
+    </div></div>
+    <div class="demo"><div class="wrap row" style="display:flex;align-items:center;flex-wrap:wrap">
+      <span>Demo date: <b>${fmtDay(today(),{weekday:'short',day:'numeric',month:'short',year:'numeric'})}</b></span>
+      <button data-act="nextDay">Next day ▸</button><button data-act="reset">Reset data</button>
+      <span class="grow"></span><span>Prototype – no real patient data</span>
+    </div></div>`;
+  let body = '';
+  const p = ui.pid && byId(ui.pid);
+  if (p) body = patientView(p);
+  else if (u.role==='nurse') body = nurseView();
+  else if (u.role==='doctor') body = doctorView();
+  else body = adminView();
+  return `${header}<main><div class="wrap">${body}</div></main>${modalHtml()}${ui.toast?`<div class="toast ${ui.toast.kind}">${esc(ui.toast.msg)}</div>`:''}`;
+}
+
+/* ---------- NURSE ---------- */
+function nurseView(){
+  const all = roundPts(), done = all.filter(tempToday), todo = all.filter(p => !tempToday(p));
+  const pct = all.length ? Math.round(done.length/all.length*100) : 0;
+  let list = ui.filter==='done' ? done : ui.filter==='all' ? all : todo;
+  list = list.filter(match);
+  list.sort((a,b) => (b.requestTemp - a.requestTemp) || (a.room - b.room));
+  const req = todo.filter(p => p.requestTemp).length;
+  return `<div class="card">
+      <div class="between"><div><h2>Today's temperature round</h2><small>${fmtDay(today(),{weekday:'long',day:'numeric',month:'long'})}</small></div>
+      <div class="tbox"><b>${done.length}/${all.length}</b><small>measured</small></div></div>
+      <div class="bar" style="margin-top:12px"><i style="width:${pct}%"></i></div>
+    </div>
+    ${req ? `<div class="banner red" style="margin-top:12px"><span>🔔</span><div><b>${req} doctor request${req>1?'s':''}</b>Doctor is waiting on these temperatures – they are listed first.</div></div>` : ''}
+    <div class="tabs">
+      ${tab('todo','To measure',todo.length, ui.filter)}${tab('done','Measured',done.length, ui.filter)}${tab('all','All patients',all.length, ui.filter)}
+    </div>
+    <input id="q" class="search" placeholder="Search name or room number…" value="${esc(ui.q)}" data-input="q">
+    <div class="grid" style="margin-top:12px">
+      ${list.length ? list.map(nurseCard).join('') : `<div class="empty">${ui.filter==='todo' && !ui.q ? '🎉 Everyone has been measured today.' : 'No patients match.'}</div>`}
+    </div>`;
+}
+function tab(id, label, n, cur, act){ return `<button class="tab ${cur===id?'on':''}" data-act="${act||'filter'}" data-id="${id}">${label}<span class="n">${n}</span></button>`; }
+function nurseCard(p){
+  const t = tempToday(p), y = p.temps[yk()];
+  const newToday = p.admitted === tk();
+  const meta = newToday ? 'New admission today' : y ? `Yesterday ${fmtT(y.temp)}` : '<span style="color:var(--red)">Yesterday: not measured</span>';
+  const badges = [p.requestTemp ? badge('Doctor requested','red') : '', newToday ? badge('New','blue') : '', (y && y.temp>=FEVER && !t) ? badge('Fever yesterday','amber') : ''].join('');
+  const act = t
+    ? `<div class="tbox ${tempClass(t.temp)}"><b>${fmtT(t.temp)}</b><small>${fmtTime(t.at)} · ${esc(t.by)}</small></div><button class="btn sm ghost" data-act="openCorrect" data-id="${p.id}">Correct</button>`
+    : `<button class="btn primary" data-act="openTemp" data-id="${p.id}">Record temperature</button>`;
+  return `<div class="pcard ${p.requestTemp?'alert':''}">
+    <div class="room"><div>${p.room}<small>Room</small></div></div>
+    <div><button class="pname" data-act="open" data-id="${p.id}">${esc(p.name)}</button><div class="pmeta">${p.age}${p.sex} · ${meta}</div>${badges?`<div class="badges">${badges}</div>`:''}</div>
+    <div class="pact">${act}</div></div>`;
+}
+
+/* ---------- DOCTOR ---------- */
+function doctorView(){
+  const all = roundPts();
+  const ready = all.filter(p => tempToday(p) && !visitToday(p));
+  const wait = all.filter(p => !tempToday(p));
+  const seen = all.filter(p => visitToday(p));
+  const sign = all.filter(eligible).length;
+  const cur = ui.tab && ['ready','wait','seen'].includes(ui.tab) ? ui.tab : 'ready';
+  let list = (cur==='ready' ? ready : cur==='wait' ? wait : seen).filter(match);
+  const pr = p => (eligible(p)?-3:0) + (tempToday(p) && tempToday(p).temp>=40 ? -2 : 0) + (tempToday(p) && tempToday(p).temp>=FEVER ? -1 : 0);
+  list.sort((a,b) => pr(a)-pr(b) || a.room-b.room);
+  const pct = all.length ? Math.round(seen.length/all.length*100) : 0;
+  return `<div class="card">
+      <div class="between"><div><h2>Today's visits</h2><small>Only patients with a recorded temperature can be visited</small></div><div class="tbox"><b>${seen.length}/${all.length}</b><small>seen</small></div></div>
+      <div class="bar" style="margin-top:12px"><i style="width:${pct}%"></i></div>
+    </div>
+    ${sign ? `<div class="banner green" style="margin-top:12px"><span>✅</span><div><b>${sign} patient${sign>1?'s have':' has'} completed ${NEED_DAYS} fever-free days</b>Open them (marked green) and sign off – the admin discharge queue updates instantly.</div></div>`:''}
+    <div class="tabs">${tab('ready','Ready to see',ready.length,cur,'tab')}${tab('wait','Awaiting temp',wait.length,cur,'tab')}${tab('seen','Seen today',seen.length,cur,'tab')}</div>
+    <input id="q" class="search" placeholder="Search name or room number…" value="${esc(ui.q)}" data-input="q">
+    <div class="grid" style="margin-top:12px">${list.length ? list.map(p => doctorCard(p,cur)).join('') : `<div class="empty">Nothing here.</div>`}</div>`;
+}
+function doctorCard(p, mode){
+  const t = tempToday(p), st = streakInfo(p), el = st.n >= NEED_DAYS;
+  const badges = [el ? badge('Eligible for discharge','green') : st.n>0 ? badge(`${st.n}/${NEED_DAYS} fever-free days`,'teal') : '', t && t.temp>=40 ? badge('High fever','red') : t && t.temp>=FEVER ? badge('Fever','red') : '', p.requestTemp ? badge('Temp requested ✓','amber') : ''].join('');
+  let act;
+  if (mode==='wait'){
+    act = `<span class="muted" style="font-size:13px">🔒 Waiting for nurse</span><button class="btn sm" data-act="requestTemp" data-id="${p.id}" ${p.requestTemp?'disabled':''}>${p.requestTemp?'Requested':'Request temperature'}</button>`;
+  } else {
+    act = `<div class="tbox ${tempClass(t.temp)}"><b>${fmtT(t.temp)}</b><small>${fmtTime(t.at)}</small></div><button class="btn ${mode==='ready'?'primary':''}" data-act="open" data-id="${p.id}">${mode==='ready'?'Visit':'View'}</button>`;
+  }
+  const y = p.temps[yk()];
+  const meta = mode==='wait' ? (y ? `Yesterday ${fmtT(y.temp)}` : 'No reading yesterday') : `Day ${diffDays(today(), fromKey(p.admitted))+1} of stay`;
+  return `<div class="pcard ${el?'ok':t&&t.temp>=40?'alert':''}">
+    <div class="room"><div>${p.room}<small>Room</small></div></div>
+    <div><button class="pname" data-act="open" data-id="${p.id}">${esc(p.name)}</button><div class="pmeta">${p.age}${p.sex} · ${meta} · ${dots(st.n)}</div>${badges?`<div class="badges">${badges}</div>`:''}</div>
+    <div class="pact">${act}</div></div>`;
+}
+
+/* ---------- patient detail (shared; actions depend on role) ---------- */
+function chart(p){
+  const end = today(); let start = addDays(end,-13); const adm = fromKey(p.admitted); if (adm > start) start = adm;
+  const days = []; for (let d=new Date(start); d<=end; d=addDays(d,1)) days.push(new Date(d));
+  const W = 620, H = 190, pl = 36, pr = 14, pt = 14, pb = 28, ymin = 36, ymax = 41;
+  const x = i => days.length===1 ? (pl+W-pr)/2 : pl + i*(W-pl-pr)/(days.length-1);
+  const y = t => pt + (ymax - Math.min(Math.max(t,ymin),ymax)) * (H-pt-pb)/(ymax-ymin);
+  let g = '';
+  for (let v=ymin; v<=ymax; v++) g += `<line x1="${pl}" x2="${W-pr}" y1="${y(v)}" y2="${y(v)}" stroke="${v===38?'#c8312b':'#e6ebef'}" stroke-width="${v===38?1.4:1}" ${v===38?'stroke-dasharray="5 4"':''}/><text x="${pl-6}" y="${y(v)+3.5}" text-anchor="end">${v}</text>`;
+  let line = '', pts = '', lab = '';
+  days.forEach((d,i) => {
+    const r = p.temps[dkey(d)], cx = x(i);
+    if ((days.length<=8) || i%2===0 || i===days.length-1) lab += `<text x="${cx}" y="${H-8}" text-anchor="middle">${d.getDate()}/${d.getMonth()+1}</text>`;
+    if (r){
+      const c = r.temp>=FEVER ? '#c8312b' : '#1b7f4b';
+      pts += `<circle cx="${cx}" cy="${y(r.temp)}" r="4.5" fill="${c}" stroke="#fff" stroke-width="1.5"><title>${dkey(d)}: ${fmtT(r.temp)}</title></circle>`;
+      const prev = p.temps[dkey(addDays(d,-1))];
+      if (prev && i>0) line += `<line x1="${x(i-1)}" y1="${y(prev.temp)}" x2="${cx}" y2="${y(r.temp)}" stroke="#8aa0b0" stroke-width="2"/>`;
+    } else if (dkey(d) !== tk()) {
+      pts += `<g><title>${dkey(d)}: not measured</title><circle cx="${cx}" cy="${y(ymin)-6}" r="4" fill="#fff" stroke="#c8312b" stroke-width="1.5"/><text x="${cx}" y="${y(ymin)-3.3}" text-anchor="middle" style="fill:#c8312b;font-size:8px">✕</text></g>`;
+    }
+  });
+  return `<svg class="chart" viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="Temperature chart">${g}${line}${pts}${lab}</svg>`;
+}
+
+function patientView(p){
+  const role = S.session.role, st = streakInfo(p), el = p.status==='admitted' && st.n>=NEED_DAYS;
+  const t = tempToday(p), v = visitToday(p);
+  const stBadge = p.status==='cleared' ? badge('Cleared for discharge','green') : p.status==='discharged' ? badge('Discharged','green') : p.status==='deceased' ? badge('Deceased','red') : badge('In treatment','teal');
+  // history rows
+  const rows = [];
+  const from = fromKey(p.admitted);
+  for (let d=today(); d>=from; d=addDays(d,-1)){
+    const k = dkey(d), r = p.temps[k], vv = p.visits[k], isT = k===tk();
+    rows.push(`<tr><td>${fmtDay(d)}${isT?' <span class="badge teal">Today</span>':''}</td>
+      <td>${r ? `<b style="color:${r.temp>=FEVER?'var(--red)':'var(--green)'}">${fmtT(r.temp)}</b><br><small>${fmtTime(r.at)} · ${esc(r.by)}${r.correction?` · corrected (${esc(r.correction)})`:''}</small>` : isT ? '<i class="muted">Pending</i>' : '<i style="color:var(--red)">Not measured</i>'}</td>
+      <td>${vv ? `${esc(vv.by)}<br><small>${esc((vv.treatments||[]).join(', '))}${vv.notes?' — '+esc(vv.notes):''}</small>` : isT ? '<i class="muted">Pending</i>' : '<i class="muted">No visit</i>'}</td></tr>`);
+  }
+  let actions = '';
+  if (role==='nurse' && p.status==='admitted'){
+    actions = `<div class="card"><h3>Temperature</h3><div class="between" style="margin-top:10px">${t?`<div class="tbox ${tempClass(t.temp)}" style="text-align:left"><b>${fmtT(t.temp)}</b><small>${fmtTime(t.at)} · ${esc(t.by)}</small></div><button class="btn" data-act="openCorrect" data-id="${p.id}">Correct reading</button>`:`<span class="muted">Not measured yet today</span><button class="btn primary" data-act="openTemp" data-id="${p.id}">Record temperature</button>`}</div></div>`;
+  } else if (role==='doctor' && p.status==='admitted'){
+    actions = visitForm(p, t, v, el);
+  } else if (role==='admin' && p.status==='cleared'){
+    actions = `<div class="banner green"><span>✅</span><div><b>Signed off by ${esc(p.clearedBy||'doctor')}</b>${p.clearedAt?fmtDay(new Date(p.clearedAt),{weekday:'short',day:'numeric',month:'short'})+' '+fmtTime(p.clearedAt):''}. Ready to discharge.</div></div><button class="btn green block" data-act="discharge" data-id="${p.id}">Discharge &amp; free Room ${p.room}</button>`;
+  }
+  return `<button class="back" data-act="back">← Back</button>
+  <div class="stack">
+    <div class="card"><div class="between" style="align-items:flex-start">
+      <div><h2>${esc(p.name)}</h2><div class="pmeta">${p.age}${p.sex} · ${p.room?`Room ${p.room}`:'No room'} · Admitted ${fmtDay(from)} · Day ${diffDays(today(),from)+1}</div></div>${stBadge}</div>
+      ${p.status==='admitted' ? `<div style="margin-top:14px" class="rowflex">${dots(st.n)}<b>${st.n>=NEED_DAYS?'3 fever-free days completed':`${Math.min(st.n,NEED_DAYS)} of ${NEED_DAYS} fever-free days`}</b></div><small>A day counts only if a reading was recorded and was below ${FEVER.toFixed(1)}°C. A missed reading or any fever restarts the count.</small>`:''}
+    </div>
+    ${actions}
+    <div class="card"><h3>Temperature trend</h3><small>Dashed line = ${FEVER.toFixed(1)}°C fever threshold · ✕ = missed reading</small>${p.hist?'<div class="empty">No detailed history in this prototype for archived cases.</div>':chart(p)}</div>
+    ${p.hist?'':`<div class="card"><h3>Daily log</h3><div class="tw"><table><thead><tr><th>Day</th><th>Temperature</th><th>Doctor visit</th></tr></thead><tbody>${rows.join('')}</tbody></table></div></div>`}
+  </div>`;
+}
+
+function visitForm(p, t, v, el){
+  if (!ui.draft || ui.draft.pid !== p.id) ui.draft = {pid:p.id, treatments: v ? v.treatments.slice() : [], notes: v ? v.notes : '', err:''};
+  const d = ui.draft;
+  if (!t){
+    return `<div class="banner amber"><span>🔒</span><div><b>Visit locked – no temperature recorded today</b>The nurse must record today's temperature first, so the doctor doesn't have to.</div></div>
+      <button class="btn block" data-act="requestTemp" data-id="${p.id}" ${p.requestTemp?'disabled':''}>${p.requestTemp?'Temperature requested ✓':'Request temperature from nurse'}</button>
+      ${deathBtn()}`;
+  }
+  const el2 = streakInfo(p).n >= NEED_DAYS;
+  return `<div class="card">
+      <div class="between"><h3>${v?'Today\'s visit (recorded '+fmtTime(v.at)+')':'Record today\'s visit'}</h3><div class="tbox ${tempClass(t.temp)}"><b>${fmtT(t.temp)}</b><small>today · ${fmtTime(t.at)}</small></div></div>
+      ${t.temp>=40?`<div class="banner red" style="margin-top:10px"><span>⚠️</span><div><b>High fever</b>Reading is ${fmtT(t.temp)} – review urgently.</div></div>`:''}
+      ${el2?`<div class="banner green" style="margin-top:10px"><span>✅</span><div><b>Meets discharge criterion</b>3 consecutive fever-free days. You can clear this patient for discharge.</div></div>`:''}
+      <label class="f">Treatment given / advised</label>
+      <div class="chips">${TREATMENTS.map(x=>`<button class="chip ${d.treatments.includes(x)?'on':''}" data-act="chip" data-v="${esc(x)}">${esc(x)}</button>`).join('')}</div>
+      <label class="f" for="visitNotes">Clinical notes</label>
+      <textarea id="visitNotes" class="t" data-input="notes" placeholder="Observations, changes to treatment…">${esc(d.notes)}</textarea>
+      ${d.err?`<div class="err">${esc(d.err)}</div>`:''}
+      <div class="grid" style="margin-top:14px;grid-template-columns:repeat(auto-fit,minmax(200px,1fr))">
+        <button class="btn primary" data-act="saveVisit">${v?'Update visit':'Save visit'}</button>
+        <button class="btn green" data-act="saveVisitClear" ${el2?'':'disabled'} title="${el2?'':'Needs 3 consecutive fever-free days'}">Save &amp; clear for discharge</button>
+      </div>
+      ${el2?'':`<small style="display:block;margin-top:8px">Discharge sign-off is enabled only after 3 consecutive fever-free days.</small>`}
+    </div>${deathBtn()}`;
+}
+const deathBtn = () => `<button class="btn danger block" data-act="openDeath">Record death…</button>`;
+
+/* ---------- ADMIN ---------- */
+function adminView(){
+  const cur = ['dash','disch','rooms','adm'].includes(ui.tab) ? ui.tab : 'dash';
+  const cleared = S.patients.filter(p => p.status==='cleared');
+  const pend = roundPts().filter(eligible);
+  const tabs = `<div class="tabs">${tab('dash','Dashboard','',cur,'tab').replace('<span class="n"></span>','')}${tab('disch','Discharges',cleared.length+pend.length,cur,'tab')}${tab('rooms','Rooms',`${activePts().length}/${CAPACITY}`,cur,'tab')}${tab('adm','Admissions',S.waitlist.length,cur,'tab')}</div>`;
+  return tabs + (cur==='dash' ? adminDash() : cur==='disch' ? adminDisch(cleared,pend) : cur==='rooms' ? adminRooms() : adminAdm());
+}
+function adminDash(){
+  const s = stats(), a = s.all, act = activePts(), rp = roundPts();
+  const occ = act.length, tD = rp.filter(tempToday).length, vD = rp.filter(visitToday).length;
+  const cleared = S.patients.filter(p=>p.status==='cleared').length, pend = rp.filter(eligible).length;
+  const rate = a.rate, pctTxt = (rate*100).toFixed(1)+'%';
+  let level = 'green', msg = `Mortality is within the ${BENCH*100}% expected limit.`;
+  if (a.n < 10){ level='blue'; msg = 'Too few closed cases to judge yet.'; }
+  else if (rate > BENCH){ level='red'; msg = `Mortality is ABOVE the ${BENCH*100}% benchmark – review treatment protocols.`; }
+  else if (rate >= BENCH-0.03){ level='amber'; msg = `Mortality is approaching the ${BENCH*100}% limit.`; }
+  const fillCls = rate > BENCH ? 'red' : rate >= BENCH-0.03 ? 'amber' : '';
+  const y = yk(), yp = rp.filter(p => p.admitted <= y), ym = yp.filter(p=>p.temps[y]).length, yv = yp.filter(p=>p.visits[y]).length;
+  const w = s.week;
+  const feed = S.log.slice(0,8);
+  return `<div class="stack">
+    <div class="banner ${level}"><span>${level==='red'?'🚨':level==='amber'?'⚠️':level==='blue'?'ℹ️':'✅'}</span><div><b>Quality of care: ${pctTxt} mortality</b>${msg}</div></div>
+    ${(cleared+pend) ? `<div class="banner amber"><span>⏱</span><div><b>${cleared} cleared · ${pend} awaiting doctor sign-off</b>Every day a cured patient stays blocks a room for someone on the waiting list. <a href="#" data-act="tab" data-id="disch" style="color:inherit;font-weight:700">Open discharge queue →</a></div></div>`:''}
+    <div class="grid g4">
+      <div class="card kpi"><div class="l">Occupancy</div><div class="v">${occ}/${CAPACITY}</div><div class="bar"><i style="width:${occ/CAPACITY*100}%;background:${occ>=CAPACITY?'var(--red)':'var(--teal)'}"></i></div><small>${CAPACITY-occ} free · ${S.waitlist.length} waiting</small></div>
+      <div class="card kpi"><div class="l">Temperatures today</div><div class="v">${tD}/${rp.length}</div><div class="bar"><i style="width:${rp.length?tD/rp.length*100:0}%"></i></div></div>
+      <div class="card kpi"><div class="l">Doctor visits today</div><div class="v">${vD}/${rp.length}</div><div class="bar"><i style="width:${rp.length?vD/rp.length*100:0}%"></i></div></div>
+      <div class="card kpi"><div class="l">Ready to discharge</div><div class="v">${cleared}</div><small>${pend} more eligible, awaiting sign-off</small></div>
+    </div>
+    <div class="card"><div class="between"><h3>Treatment quality vs benchmark</h3><small>Benchmark: ≤ ${BENCH*100}% mortality · ≥ ${100-BENCH*100}% success</small></div>
+      <div class="gauge"><div class="fill ${fillCls}" style="width:${Math.min(rate/0.30,1)*100}%"></div><div class="mark"></div></div>
+      <div class="between"><small>0%</small><small>30%</small></div>
+      <div class="grid g4" style="margin-top:12px">
+        <div><div class="l muted">Closed cases</div><b style="font-size:22px">${a.n}</b></div>
+        <div><div class="l muted">Cured &amp; discharged</div><b style="font-size:22px;color:var(--green)">${a.cured}</b></div>
+        <div><div class="l muted">Deaths</div><b style="font-size:22px;color:var(--red)">${a.dead}</b></div>
+        <div><div class="l muted">Success rate</div><b style="font-size:22px">${a.n?((1-rate)*100).toFixed(1):'–'}%</b></div>
+      </div>
+      <small style="display:block;margin-top:10px">Last 7 days: ${w.n} closed · ${w.dead} deaths · ${w.n?(w.rate*100).toFixed(1)+'% mortality':'–'}. Mortality = deaths ÷ (cured + deaths); patients still in treatment are not counted.</small>
+    </div>
+    <div class="grid g2">
+      <div class="card"><h3>Yesterday's process compliance</h3><small>${fmtDay(addDays(today(),-1))} · ${yp.length} patients in care</small>
+        <div style="margin-top:12px"><div class="between"><span>Temperature taken</span><b>${ym}/${yp.length}</b></div><div class="bar"><i style="width:${yp.length?ym/yp.length*100:0}%"></i></div></div>
+        <div style="margin-top:12px"><div class="between"><span>Doctor visited</span><b>${yv}/${yp.length}</b></div><div class="bar"><i style="width:${yp.length?yv/yp.length*100:0}%"></i></div></div></div>
+      <div class="card"><h3>Recent activity</h3>${feed.length?`<ul class="feed">${feed.map(f=>`<li><time>${fmtTime(f.at)}</time><span class="${f.kind}">${esc(f.text)}</span></li>`).join('')}</ul>`:'<div class="empty">No activity yet today.</div>'}</div>
+    </div>
+  </div>`;
+}
+function adminDisch(cleared, pend){
+  const card = (p, isCleared) => {
+    const since = isCleared ? new Date(p.clearedAt) : eligibleSince(p);
+    const wait = isCleared ? diffDays(today(), new Date(new Date(p.clearedAt).setHours(0,0,0,0))) : (since ? diffDays(today(), since) : 0);
+    return `<div class="pcard ${isCleared?'ok':''}">
+      <div class="room"><div>${p.room}<small>Room</small></div></div>
+      <div><button class="pname" data-act="open" data-id="${p.id}">${esc(p.name)}</button>
+        <div class="pmeta">${p.age}${p.sex} · ${isCleared?`Signed off ${fmtDay(new Date(p.clearedAt))} by ${esc(p.clearedBy)}`:`Eligible since ${fmtDay(since)}`}</div>
+        <div class="badges">${wait>0 ? badge(`Waiting ${wait} day${wait>1?'s':''}`,'amber') : badge('New today','blue')}${isCleared?'':badge('Doctor sign-off pending','amber')}</div></div>
+      <div class="pact">${isCleared?`<button class="btn green" data-act="discharge" data-id="${p.id}">Discharge &amp; free room</button>`:'<span class="muted" style="font-size:13px">Waiting for doctor</span>'}</div></div>`;
+  };
+  return `<div class="stack">
+    <div><div class="sec-title"><h2>Ready to discharge</h2>${badge(cleared.length,'green')}</div>
+      <div class="grid">${cleared.length?cleared.map(p=>card(p,true)).join(''):'<div class="card empty">No one is waiting for discharge.</div>'}</div></div>
+    <div><div class="sec-title"><h2>Eligible – awaiting doctor sign-off</h2>${badge(pend.length,'amber')}</div>
+      <small>These patients completed ${NEED_DAYS} fever-free days. The doctor will sign off at the next visit.</small>
+      <div class="grid" style="margin-top:10px">${pend.length?pend.map(p=>card(p,false)).join(''):'<div class="card empty">None.</div>'}</div></div>
+  </div>`;
+}
+function adminRooms(){
+  const byRoom = {}; activePts().forEach(p => byRoom[p.room] = p);
+  let tiles = '';
+  for (let r=1;r<=CAPACITY;r++){
+    const p = byRoom[r];
+    if (!p){ tiles += `<div class="tile free" data-act="admitRoom" data-room="${r}"><b>${r}</b><span>Free</span></div>`; continue; }
+    const t = tempToday(p), cls = p.status==='cleared' ? 'ready' : eligible(p) ? 'elig' : !t ? 'wait' : !visitToday(p) ? 'temp' : 'done';
+    tiles += `<div class="tile ${cls}" data-act="open" data-id="${p.id}">${t&&t.temp>=FEVER&&p.status==='admitted'?'<i title="Fever today"></i>':''}<b>${r}</b><span>${esc(p.name.split(' ')[0])}</span></div>`;
+  }
+  return `<div class="card"><div class="between"><h2>Room map</h2><b>${activePts().length}/${CAPACITY} occupied</b></div>
+    <div class="legend"><span class="l-wait">Temp pending</span><span class="l-temp">Temp done, no visit</span><span class="l-done">Temp + visit done</span><span class="l-elig">Eligible</span><span class="l-ready">Ready to discharge</span><span class="l-free">Free</span><span>🔴 dot = fever today</span></div>
+    <div class="rooms">${tiles}</div></div>`;
+}
+function adminAdm(){
+  const fr = freeRooms(), full = fr.length === 0, e = ui.formErr;
+  const sel = ui.admitRoom && fr.includes(ui.admitRoom) ? ui.admitRoom : fr[0];
+  return `<div class="grid g2">
+    <div class="card"><h2>${full?'Add to waiting list':'Admit patient'}</h2>
+      ${full?`<div class="banner red" style="margin-top:10px"><span>🚫</span><div><b>All ${CAPACITY} rooms are occupied</b>New patients can only join the waiting list. Discharge a cured patient to free a room.</div></div>`:`<small>${fr.length} room${fr.length>1?'s':''} free.</small>`}
+      <label class="f" for="fName">Full name</label><input id="fName" class="t" placeholder="Patient name">${e.name?`<div class="err">${e.name}</div>`:''}
+      <div class="grid" style="grid-template-columns:1fr 1fr;gap:10px"><div><label class="f" for="fAge">Age</label><input id="fAge" class="t" type="number" inputmode="numeric" min="0" max="120" placeholder="Years">${e.age?`<div class="err">${e.age}</div>`:''}</div>
+      <div><label class="f" for="fSex">Sex</label><select id="fSex" class="t"><option>F</option><option>M</option><option>O</option></select></div></div>
+      ${full?'':`<label class="f" for="fRoom">Room</label><select id="fRoom" class="t">${fr.map(r=>`<option value="${r}" ${r===sel?'selected':''}>Room ${r}</option>`).join('')}</select>`}
+      <button class="btn primary block" style="margin-top:16px" data-act="${full?'addWait':'admitNew'}">${full?'Add to waiting list':'Admit patient'}</button></div>
+    <div class="card"><div class="between"><h2>Waiting list</h2>${badge(S.waitlist.length,'amber')}</div>
+      <small>First come, first served. Admit when a room frees up.</small>
+      <div class="stack" style="margin-top:10px">${S.waitlist.length ? S.waitlist.map((w,i)=>`<div class="between" style="border:1px solid var(--line);border-radius:12px;padding:10px 12px"><div><b>${i+1}. ${esc(w.name)}</b><div class="pmeta">${w.age}${w.sex} · since ${fmtDay(new Date(w.addedAt))} ${fmtTime(w.addedAt)}</div></div><button class="btn sm ${full?'':'primary'}" data-act="admitWait" data-id="${w.id}" ${full?'disabled':''}>${full?'No room':'Admit → Room '+fr[0]}</button></div>`).join('') : '<div class="empty">Waiting list is empty.</div>'}</div></div>
+  </div>`;
+}
+
+/* ---------- modals ---------- */
+function modalHtml(){
+  const m = ui.modal; if (!m) return '';
+  if (m.type==='temp'){
+    const p = byId(m.pid), ex = tempToday(p), unit = ui.unit;
+    return `<div class="overlay" data-act="closeModal"><div class="sheet" role="dialog" aria-modal="true">
+      <div class="between"><div><h2>${ex?'Correct temperature':'Record temperature'}</h2><div class="pmeta">Room ${p.room} · ${esc(p.name)} · ${p.age}${p.sex}</div></div><button class="btn sm ghost" data-act="closeModal">✕</button></div>
+      ${ex?`<div class="banner amber" style="margin-top:12px"><span>⚠️</span><div><b>Already measured today: ${fmtT(ex.temp)} at ${fmtTime(ex.at)}</b>Only correct this if it was wrong. A reason is required and the change is logged.</div></div>`:''}
+      <div class="between" style="margin:16px 0 8px"><label class="f" for="tempInput" style="margin:0">Reading</label><div class="seg"><button class="${unit==='C'?'on':''}" data-act="unit" data-u="C">°C</button><button class="${unit==='F'?'on':''}" data-act="unit" data-u="F">°F</button></div></div>
+      <input id="tempInput" class="t big" type="number" step="0.1" inputmode="decimal" placeholder="${unit==='C'?'36.8':'98.4'}" value="${esc(m.val||'')}" autofocus>
+      <div id="tempFb" class="fb">Enter the thermometer reading.</div>
+      ${ex?`<label class="f" for="reasonSel">Reason for correction</label><select id="reasonSel" class="t"><option value="">Select…</option><option>Typing error</option><option>Wrong patient / room</option><option>Re-measured – thermometer fault</option><option>Other</option></select>`:''}
+      <div class="grid" style="grid-template-columns:1fr 1fr;margin-top:16px"><button class="btn" data-act="closeModal">Cancel</button><button id="saveTemp" class="btn primary" data-act="saveTemp" disabled>${ex?'Save correction':'Save reading'}</button></div>
+    </div></div>`;
+  }
+  if (m.type==='death'){
+    const p = byId(m.pid);
+    return `<div class="overlay" data-act="closeModal"><div class="sheet" role="dialog" aria-modal="true">
+      <div class="between"><div><h2>Record death</h2><div class="pmeta">Room ${p.room} · ${esc(p.name)}</div></div><button class="btn sm ghost" data-act="closeModal">✕</button></div>
+      <div class="banner red" style="margin:12px 0"><span>⚠️</span><div><b>This cannot be undone</b>The patient will count as a death in the centre's mortality rate, and the room is released.</div></div>
+      <label class="f" for="deathNote">Clinical note (required)</label>
+      <textarea id="deathNote" class="t" placeholder="Time and circumstances…"></textarea>
+      <div class="grid" style="grid-template-columns:1fr 1fr;margin-top:16px"><button class="btn" data-act="closeModal">Cancel</button><button id="confirmDeath" class="btn danger" data-act="confirmDeath" disabled>Confirm death</button></div>
+    </div></div>`;
+  }
+  return '';
+}
+
+/* live feedback for temperature input (no re-render so focus is kept) */
+function readTempC(){
+  const raw = ($('#tempInput')||{}).value; if (raw === '' || raw == null) return NaN;
+  const v = parseFloat(raw); if (isNaN(v)) return NaN;
+  return ui.unit==='F' ? (v-32)*5/9 : v;
+}
+function updateTempFb(){
+  const fb = $('#tempFb'), btn = $('#saveTemp'); if (!fb) return;
+  const c = readTempC(), ex = ui.modal && tempToday(byId(ui.modal.pid));
+  let cls='', msg='', ok=false;
+  if (isNaN(c)){ msg = 'Enter the thermometer reading.'; }
+  else if (c < 34 || c > 43){ cls='error'; msg = 'That value looks wrong (valid range 34–43 °C / 93.2–109.4 °F). Please re-measure.'; }
+  else if (c < 35.5){ cls='warn'; msg = 'Unusually low – re-check the thermometer before saving.'; ok=true; }
+  else if (c >= 40){ cls='crit'; msg = '🚨 High fever (≥ 40 °C). Doctor will be alerted. Resets the 3-day count.'; ok=true; }
+  else if (c >= FEVER){ cls='fever'; msg = 'Fever (≥ 38.0 °C). Resets the patient’s 3-day fever-free count.'; ok=true; }
+  else { cls='ok'; msg = 'No fever. Counts toward the 3-day discharge criterion.'; ok=true; }
+  fb.className = 'fb '+cls; fb.textContent = msg;
+  if (ex){ const rs = $('#reasonSel'); if (!rs || !rs.value) ok = false; }
+  btn.disabled = !ok;
+}
+const $ = (s, r) => (r||document).querySelector(s);
+
+/* ---------- render + events ---------- */
+function render(resetScroll){
+  const ae = document.activeElement, fid = ae && ae.id, sel = (ae && ae.selectionStart != null) ? [ae.selectionStart, ae.selectionEnd] : null;
+  const sc = window.scrollY;
+  app.innerHTML = S.session ? shell() : loginView();
+  if (fid){ const el = document.getElementById(fid); if (el){ el.focus(); try{ if(sel) el.setSelectionRange(sel[0], sel[1]); }catch(e){} } }
+  window.scrollTo(0, resetScroll ? 0 : sc);
+  if (ui.modal && ui.modal.type==='temp'){ const i = $('#tempInput'); if (i && !fid){ i.focus(); } updateTempFb(); }
+}
+function go(fn, resetScroll){ try { fn(); } catch(err){ toast(err.message, 'error'); } render(resetScroll); }
+
+document.addEventListener('click', e => {
+  const el = e.target.closest('[data-act]'); if (!el) return;
+  const a = el.dataset.act, id = el.dataset.id;
+  if (a==='closeModal' && e.target !== el) return;
+  if (el.tagName==='A') e.preventDefault();
+  switch(a){
+    case 'login': ui.tab = defaultTab(el.dataset.role); ui.filter='todo'; ui.q=''; ui.pid=null; ui.modal=null; S.session = Object.assign({}, USERS[el.dataset.role]); save(); return render(true);
+    case 'logout': S.session = null; ui.pid=null; ui.modal=null; ui.draft=null; save(); return render(true);
+    case 'reset': resetData(true); ui.pid=null; ui.modal=null; ui.draft=null; toast('Demo data reset to the starting state.','good'); return render(true);
+    case 'nextDay': { const r = nextDay(); ui.pid=null; ui.draft=null; toast(`Moved to ${fmtDay(today())}. Yesterday: ${r.mt} temperatures and ${r.mv} doctor visits were missed.`, r.mt||r.mv?'warn':'good'); return render(true); }
+    case 'tab': ui.tab = id; ui.q=''; ui.pid=null; return render(true);
+    case 'filter': ui.filter = id; return render();
+    case 'open': ui.pid = id; ui.draft = null; return render(true);
+    case 'back': ui.pid = null; ui.draft = null; return render(true);
+    case 'openTemp': ui.modal = {type:'temp', pid:id, val:''}; return render();
+    case 'openCorrect': ui.modal = {type:'temp', pid:id, val:''}; return render();
+    case 'closeModal': ui.modal = null; return render();
+    case 'unit': { const c = readTempC(); ui.unit = el.dataset.u; ui.modal.val = isNaN(c) ? '' : (ui.unit==='F' ? (c*9/5+32) : c).toFixed(1); return render(); }
+    case 'saveTemp': return go(() => {
+      const c = readTempC(), p = byId(ui.modal.pid), ex = tempToday(p), rs = $('#reasonSel');
+      const v = Math.round(c*10)/10;
+      recordTemp(p.id, v, rs ? rs.value : '');
+      ui.modal = null;
+      const msg = v>=40 ? `Room ${p.room}: ${fmtT(v)} – HIGH FEVER, doctor alerted.` : v>=FEVER ? `Room ${p.room}: ${fmtT(v)} saved – fever.` : `Room ${p.room}: ${fmtT(v)} saved. Doctor can now visit.`;
+      toast(ex ? `Correction saved for Room ${p.room}.` : msg, v>=FEVER?'warn':'good');
+    });
+    case 'requestTemp': return go(() => { requestTemp(id); toast('Nurse has been asked to take this temperature.','good'); });
+    case 'chip': { const d = ui.draft, v = el.dataset.v; d.treatments = d.treatments.includes(v) ? d.treatments.filter(x=>x!==v) : d.treatments.concat(v); return render(); }
+    case 'saveVisit': case 'saveVisitClear': {
+      const d = ui.draft, clear = a==='saveVisitClear';
+      try { saveVisit(d.pid, d.treatments, d.notes, clear); const p = byId(d.pid); ui.draft = null;
+        if (clear){ ui.pid = null; toast(`Room ${p.room} cleared for discharge – admin has been notified.`,'good'); } else toast(`Visit saved for Room ${p.room}.`,'good'); }
+      catch(err){ d.err = err.message; toast(err.message,'error'); }
+      return render(true);
+    }
+    case 'openDeath': ui.modal = {type:'death', pid:ui.pid}; return render();
+    case 'confirmDeath': return go(() => { const p = byId(ui.modal.pid); recordDeath(p.id, $('#deathNote').value); ui.modal=null; ui.pid=null; ui.draft=null; toast(`${p.name} recorded as deceased. Room released.`,'warn'); }, true);
+    case 'discharge': return go(() => { const p = byId(id), r = p.room; discharge(id); ui.pid=null; toast(`${p.name} discharged. Room ${r} is now free.`,'good'); }, true);
+    case 'admitRoom': ui.admitRoom = parseInt(el.dataset.room,10); ui.tab='adm'; return render(true);
+    case 'admitNew': case 'addWait': {
+      const name = $('#fName').value.trim(), age = parseInt($('#fAge').value,10), sex = $('#fSex').value;
+      ui.formErr = {};
+      if (name.length < 2) ui.formErr.name = 'Enter the patient’s full name.';
+      if (isNaN(age) || age < 0 || age > 120) ui.formErr.age = 'Enter a valid age (0–120).';
+      if (Object.keys(ui.formErr).length) { render(); return; }
+      return go(() => { if (a==='admitNew'){ const room = parseInt($('#fRoom').value,10); admit({name,age,sex}, room); toast(`${name} admitted to Room ${room}.`,'good'); } else { addWait({name,age,sex}); toast(`${name} added to the waiting list.`,'warn'); } ui.admitRoom=null; });
+    }
+    case 'admitWait': return go(() => { const r = admitWait(id); toast(`Admitted from waiting list to Room ${r}.`,'good'); });
+  }
+});
+document.addEventListener('input', e => {
+  const t = e.target;
+  if (t.id==='tempInput'){ ui.modal.val = t.value; updateTempFb(); }
+  else if (t.id==='reasonSel'){ updateTempFb(); }
+  else if (t.id==='deathNote'){ $('#confirmDeath').disabled = t.value.trim().length < 5; }
+  else if (t.dataset.input==='q'){ ui.q = t.value; render(); }
+  else if (t.dataset.input==='notes'){ ui.draft.notes = t.value; }
+});
+document.addEventListener('change', e => { if (e.target.id==='reasonSel') updateTempFb(); });
+document.addEventListener('keydown', e => {
+  if (e.key==='Escape' && ui.modal){ ui.modal=null; render(); }
+  if (e.key==='Enter' && e.target.id==='tempInput'){ const b = $('#saveTemp'); if (b && !b.disabled) b.click(); }
+});
+
+/* ---------- boot ---------- */
+S = load() || seed();
+save();
+render(true);
+</script>
+</body>
+</html>
